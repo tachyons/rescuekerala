@@ -14,6 +14,7 @@ import os
 import environ
 import dj_database_url
 import raven
+from urllib.parse import urlparse
 
 def get_list(text):
     return [item.strip() for item in text.split(',')]
@@ -158,6 +159,21 @@ LOGGING = {
         },
     }
 }
+if 'REDIS_URL' in os.environ:
+    parsed_redis = urlparse(os.environ['REDIS_URL'])
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': parsed_redis.netloc,
+            'OPTIONS': {
+                'DB': int(parsed_redis.path[1:]),
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+        },
+    }
+    MESSAGE_STORAGE = ('django.contrib.messages.storage.'
+                       'fallback.FallbackStorage')
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
